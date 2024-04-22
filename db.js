@@ -1,12 +1,12 @@
 /** Database connection for messagely. */
 
 const { Client } = require('pg');
-const { DB_URI } = require("./config");
+const { DB_URI, DB_PASSWORD, DB_USERNAME } = require("./config");
 
 const client = new Client({
-  user: process.env.user,
+  user: DB_USERNAME,
   host: 'localhost',
-  password: process.env.password,
+  password: DB_PASSWORD,
   database: DB_URI,
   port: 5432, 
 });

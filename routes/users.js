@@ -55,4 +55,4 @@ router.get('/', async (req, res, next ) => {
  **/
 
 
-module.exports = users
+module.exports = router
