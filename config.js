@@ -10,7 +10,7 @@ const DB_URI = (process.env.NODE_ENV === "test")
 
 const SECRET_KEY = process.env.SECRET_KEY || "secret";
 
-const DB_USERNAME = process.env.DB_USER
+const DB_USERNAME = process.env.DB_USERNAME
 const DB_PASSWORD = process.env.DB_PASSWORD 
 
 const BCRYPT_WORK_FACTOR = 12;

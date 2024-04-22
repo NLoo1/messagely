@@ -32,6 +32,16 @@ router.get('/', async (req, res, next ) => {
  *
  **/
 
+router.get('/:username', async (req,res,next) => {
+    try{
+        const username = req.body.username
+        const results = await db.query('SELECT username, first_name, last_name, phone FROM users WHERE username=$1', [username])
+        return res.json({user: results})
+    } catch(e){
+        return next(e)
+    }
+})
+
 
 /** GET /:username/to - get messages to user
  *
@@ -43,6 +53,15 @@ router.get('/', async (req, res, next ) => {
  *
  **/
 
+router.get('/:username/to', async (req,res,next) => {
+    try{
+        const username = req.body.username
+        const results = await db.query('SELECT * FROM messages WHERE to_username=$1', [username])
+        return res.json({messages: results})
+    } catch(e){
+        return next(e)
+    }
+})
 
 /** GET /:username/from - get messages from user
  *
@@ -53,6 +72,16 @@ router.get('/', async (req, res, next ) => {
  *                 to_user: {username, first_name, last_name, phone}}, ...]}
  *
  **/
+
+router.get(':/username/from', async (req,res,next) => {
+    try {
+        const username = req.body.username
+        const results = await db.query('SELECT * FROM messages WHERE from_username=$1', [username])
+        return res.json({messages: results})
+    } catch(e){
+        return next(e)
+    }
+})
 
 
 module.exports = router
