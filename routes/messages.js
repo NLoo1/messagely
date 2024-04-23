@@ -22,7 +22,6 @@ const { ensureLoggedIn, ensureAdmin, ensureCorrectUser, getCurrentDateTime } = r
 
 router.get('/:id', ensureCorrectUser, async (req, res, next) => {
     const user = req.params.id
-    // console.log(user)
     const results = await db.query(
         `SELECT id, body, sent_at, read_at, from_username, to_username FROM messages WHERE id=$1`, [user]
     )
@@ -40,7 +39,6 @@ router.get('/:id', ensureCorrectUser, async (req, res, next) => {
 
 router.post('/', ensureLoggedIn, async (req, res, next) =>{
     const from_user = req.session.user.username
-    // console.log(from_user)
     const to_user = req.body.to_username
     const body = req.body.body
     const date = getCurrentDateTime()
