@@ -50,28 +50,31 @@ router.post('/login', async (req,res,next) => {
 
 
 router.post('/register', async (req, res, next) => {
-    try {
-      const {username, password, first_name, last_name, phone} = req.body;
-      if (!username || !password || !first_name || !last_name || !phone) {
-        throw new ExpressError("Invalid username/password/first name/last name/phone. Please try again", 400);
-      }
-      const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
-      const date = getCurrentDateTime()
-      
-      console.log(typeof date)
-      const results = await db.query(`
-        INSERT INTO users (username, password, join_at, last_login_at, first_name, last_name, phone)
-        VALUES ($1, $2, $3::timestamp with time zone, $3::timestamp with time zone, $4, $5, $6)
-        RETURNING username`,
-        [username, hashedPassword, date, first_name, last_name, phone]);
-      req.session.user = {username, token}
-      return res.json(results.rows[0]);
-    } catch (e) {
-      if (e.code === '23505') {
-        return next(new ExpressError("Username taken. Please pick another!", 400));
-      }
-      return next(e)
+  try {
+    const { username, password, first_name, last_name, phone } = req.body;
+    if (!username || !password || !first_name || !last_name || !phone) {
+      throw new ExpressError("Invalid username/password/first name/last name/phone. Please try again", 400);
     }
-  });
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
+    const date = getCurrentDateTime();
+    
+    const results = await db.query(`
+      INSERT INTO users (username, password, join_at, last_login_at, first_name, last_name, phone)
+      VALUES ($1, $2, $3::timestamp with time zone, $3::timestamp with time zone, $4, $5, $6)
+      RETURNING username`,
+      [username, hashedPassword, date, first_name, last_name, phone]);
+
+    const token = jwt.sign({ username }, SECRET_KEY);
+    req.session.user = { username: username, token: token };
+
+    return res.json({ username: username, id: results.rows[0].id, token: token });
+  } catch (e) {
+    if (e.code === '23505') {
+      return next(new ExpressError("Username taken. Please pick another!", 400));
+    }
+    return next(e);
+  }
+});
+
 
 module.exports = router

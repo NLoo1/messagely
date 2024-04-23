@@ -3,6 +3,8 @@
 const jwt = require("jsonwebtoken");
 const { SECRET_KEY } = require("../config"); 
 const session = require('express-session');
+const db = require("../db");
+const ExpressError = require("../expressError");
 
 /** Middleware: Authenticate user. */
 
@@ -31,12 +33,22 @@ function ensureLoggedIn(req, res, next) {
 /** Middleware: Requires correct username. */
 
 
-function ensureCorrectUser(req, res, next) {
-  if (req.session.user && req.session.user.username === req.params.username) {
-    return next();
-  } else {
-    return next({ status: 401, message: "Unauthorized" });
+async function ensureCorrectUser(req, res, next) {
+  try{
+    if(!req.session.user) throw new ExpressError('Not logged in', 400)
+    const search = await db.query(`SELECT * FROM messages WHERE to_username=$1 OR from_username=$1`, [req.session.user.username])
+    if(search) return next();
+    else {
+      return next({ status: 401, message: "Unauthorized" });
+    }
+  } catch(e){
+    return next(e)
   }
+
+  
+  // if (req.session.user && req.session.user.username === req.params.username) {
+  //   return next();
+  // } 
 }
 
 
@@ -60,9 +72,17 @@ function getCurrentDateTime() {
     return formattedDateTimeWithTimeZone;
 }
 
+function checkUserAndPassword(user, password) {
+  if (!user || !password) {
+    throw new ExpressError("Username and password required", 400);
+  } 
+}
+
+
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
   ensureCorrectUser,
-  getCurrentDateTime
+  getCurrentDateTime,
+  checkUserAndPassword
 };

@@ -21,9 +21,10 @@ const { ensureLoggedIn, ensureAdmin, ensureCorrectUser, getCurrentDateTime } = r
  **/
 
 router.get('/:id', ensureCorrectUser, async (req, res, next) => {
-    const user = req.body.id
+    const user = req.params.id
+    // console.log(user)
     const results = await db.query(
-        `SELECT id, body, sent_at, from_user, to_user FROM users WHERE username=$1`, [user]
+        `SELECT id, body, sent_at, read_at, from_username, to_username FROM messages WHERE id=$1`, [user]
     )
     if(results.rows[0]) return res.json({message: results.rows[0]})
     throw new ExpressError('User not found', 400)
@@ -38,7 +39,8 @@ router.get('/:id', ensureCorrectUser, async (req, res, next) => {
  **/
 
 router.post('/', ensureLoggedIn, async (req, res, next) =>{
-    const from_user = req.user.username
+    const from_user = req.session.user.username
+    // console.log(from_user)
     const to_user = req.body.to_username
     const body = req.body.body
     const date = getCurrentDateTime()
@@ -58,10 +60,10 @@ router.post('/', ensureLoggedIn, async (req, res, next) =>{
  **/
 
 router.post('/:id/read', ensureCorrectUser, async (req, res, next) => {
-    const user = req.body.id
+    const user = req.params.id
     const date = getCurrentDateTime()
     const results = await db.query(
-        `UPDATE messages SET read_at=$1 WHERE username=$2 RETURNING id, read_at`, [date,user]
+        `UPDATE messages SET read_at=$1 WHERE id=$2 RETURNING id, read_at`, [date,user]
     )
     if(results.rows[0]) return res.json({message: results.rows[0]})
     throw new ExpressError('User not found', 400)
