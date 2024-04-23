@@ -2,11 +2,21 @@
 
 
 const express = require("express");
+
+const session = require('express-session');
+
 const cors = require("cors");
 const { authenticateJWT } = require("./middleware/auth");
 
 const ExpressError = require("./expressError")
 const app = express();
+
+app.use(session({
+  secret: process.env.SECRET_KEY, 
+  resave: true,
+  saveUninitialized: false,
+  cookie: { secure: false } 
+}));
 
 // allow both form-encoded and json body parsing
 app.use(express.json());
@@ -18,6 +28,9 @@ app.use(cors());
 // get auth token for all routes
 app.use(authenticateJWT);
 
+
+
+
 /** routes */
 
 const authRoutes = require("./routes/auth");
@@ -27,6 +40,10 @@ const messageRoutes = require("./routes/messages");
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/messages", messageRoutes);
+
+app.get('/', (req, res,next) => {
+  return res.json({message: 'Server is working.'})
+})
 
 /** 404 handler */
 

@@ -5,7 +5,7 @@ const db = require("../db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { BCRYPT_WORK_FACTOR, SECRET_KEY } = require("../config");
-const { ensureLoggedIn, ensureAdmin, authenticateJWT } = require("../middleware/auth");
+const { ensureLoggedIn, ensureAdmin, authenticateJWT, getCurrentDateTime } = require("../middleware/auth");
 
 /** POST /login - login: {username, password} => {token}
  *
@@ -26,10 +26,11 @@ router.post('/login', async (req,res,next) => {
           if (user) {
             if (await bcrypt.compare(password, user.password)) {
               const token = jwt.sign({ username }, SECRET_KEY);
-              const date = Date.now()
-              await db.query(
-                `UPDATE users SET last_login=$1 WHERE username=$2`, [date, username]
+              const date = getCurrentDateTime()
+              const login = await db.query(
+                `UPDATE users SET last_login_at=$1::timestamp with time zone WHERE username=$2`, [date, username]
               )
+              req.session.user = {username: username, token: token}
               return res.json({ message: `Logged in!`, token })
             }
           }
@@ -50,17 +51,20 @@ router.post('/login', async (req,res,next) => {
 
 router.post('/register', async (req, res, next) => {
     try {
-      const { username, password } = req.body;
-      if (!username || !password) {
-        throw new ExpressError("Username and password required", 400);
+      const {username, password, first_name, last_name, phone} = req.body;
+      if (!username || !password || !first_name || !last_name || !phone) {
+        throw new ExpressError("Invalid username/password/first name/last name/phone. Please try again", 400);
       }
       const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
-      const date = Date.now()
+      const date = getCurrentDateTime()
+      
+      console.log(typeof date)
       const results = await db.query(`
-        INSERT INTO users (username, password, join_at, last_login_at)
-        VALUES ($1, $2, $3, $3)
+        INSERT INTO users (username, password, join_at, last_login_at, first_name, last_name, phone)
+        VALUES ($1, $2, $3::timestamp with time zone, $3::timestamp with time zone, $4, $5, $6)
         RETURNING username`,
-        [username, hashedPassword, date]);
+        [username, hashedPassword, date, first_name, last_name, phone]);
+      req.session.user = {username, token}
       return res.json(results.rows[0]);
     } catch (e) {
       if (e.code === '23505') {

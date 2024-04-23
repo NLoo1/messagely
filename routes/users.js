@@ -5,7 +5,7 @@ const db = require("../db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { BCRYPT_WORK_FACTOR, SECRET_KEY } = require("../config");
-const { ensureLoggedIn, ensureAdmin, ensureCorrectUser } = require("../middleware/auth");
+const { ensureLoggedIn, ensureAdmin, ensureCorrectUser, getCurrentDateTime } = require("../middleware/auth");
 
 /** GET / - get list of users.
  *

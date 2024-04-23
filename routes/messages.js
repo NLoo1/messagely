@@ -5,7 +5,7 @@ const db = require("../db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { BCRYPT_WORK_FACTOR, SECRET_KEY } = require("../config");
-const { ensureLoggedIn, ensureAdmin, ensureCorrectUser } = require("../middleware/auth");
+const { ensureLoggedIn, ensureAdmin, ensureCorrectUser, getCurrentDateTime } = require("../middleware/auth");
 
 /** GET /:id - get detail of message.
  *
@@ -41,7 +41,7 @@ router.post('/', ensureLoggedIn, async (req, res, next) =>{
     const from_user = req.user.username
     const to_user = req.body.to_username
     const body = req.body.body
-    const date = Date.now()
+    const date = getCurrentDateTime()
     const results = await db.query(
         `INSERT INTO messages (from_username, to_username, body, sent_at) VALUES ($1,$2,$3,$4) RETURNING id, from_username, to_username, body, sent_at`, [from_user,to_user,body,date]
     )
@@ -59,7 +59,7 @@ router.post('/', ensureLoggedIn, async (req, res, next) =>{
 
 router.post('/:id/read', ensureCorrectUser, async (req, res, next) => {
     const user = req.body.id
-    const date = Date.now()
+    const date = getCurrentDateTime()
     const results = await db.query(
         `UPDATE messages SET read_at=$1 WHERE username=$2 RETURNING id, read_at`, [date,user]
     )
