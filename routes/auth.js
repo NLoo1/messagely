@@ -26,6 +26,10 @@ router.post('/login', async (req,res,next) => {
           if (user) {
             if (await bcrypt.compare(password, user.password)) {
               const token = jwt.sign({ username }, SECRET_KEY);
+              const date = Date.now()
+              await db.query(
+                `UPDATE users SET last_login=$1 WHERE username=$2`, [date, username]
+              )
               return res.json({ message: `Logged in!`, token })
             }
           }
@@ -51,11 +55,12 @@ router.post('/register', async (req, res, next) => {
         throw new ExpressError("Username and password required", 400);
       }
       const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
+      const date = Date.now()
       const results = await db.query(`
-        INSERT INTO users (username, password)
-        VALUES ($1, $2)
+        INSERT INTO users (username, password, join_at, last_login_at)
+        VALUES ($1, $2, $3, $3)
         RETURNING username`,
-        [username, hashedPassword]);
+        [username, hashedPassword, date]);
       return res.json(results.rows[0]);
     } catch (e) {
       if (e.code === '23505') {

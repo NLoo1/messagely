@@ -63,7 +63,7 @@ class User {
     const results = await db.query(
       `SELECT username, first_name, last_name, phone FROM users`
     )
-    return results.rows
+    return jsonify(results.rows)
   }
 
   /** Get: get user by username
@@ -80,7 +80,7 @@ class User {
     const result = await db.query(
       `SELECT username, first_name, last_name, phone, join_at, last_login_at FROM users WHERE username=$1`, [username]
     )
-    return result.rows[0]
+    return jsonify(result.rows[0])
   }
 
   /** Return messages from this user.
@@ -96,7 +96,7 @@ class User {
     const messages = await db.query(
       `SELECT username, first_name, last_name, phone, join_at, last_login_at FROM messages WHERE from_user=$1`, [username]
     )
-    return messages.rows
+    return jsonify(messages.rows)
   }
 
   /** Return messages to this user.
@@ -112,7 +112,7 @@ class User {
     const messages = await db.query(
       `SELECT * FROM messages WHERE to_user=$1`, [username]
     )
-    return messages.rows
+    return jsonify(messages.rows)
 
    }
 }
