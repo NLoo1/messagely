@@ -8,14 +8,18 @@ const ExpressError = require("../expressError");
 
 class User {
 
+  checkUserAndPassword(user, password=None){
+    if(password==None && !user) throw new ExpressError("Username required", 400);
+    else if (!username || !password) throw new ExpressError("Username and password required", 400);
+    return
+    }
+
   /** register new user -- returns
    *    {username, password, first_name, last_name, phone}
    */
 
   static async register({username, password, first_name, last_name, phone}) { 
-    if (!username || !password) {
-      throw new ExpressError("Username and password required", 400);
-    }
+    checkUserAndPassword(username, password)
     // hash password
     const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
 
@@ -31,6 +35,7 @@ class User {
   /** Authenticate: is this username/password valid? Returns boolean. */
 
   static async authenticate(username, password) {
+    checkUserAndPassword(username, password)
     const result = await db.query(
       `SELECT password FROM users WHERE username=$1` [username]
     ) 
@@ -47,14 +52,19 @@ class User {
   static async updateLoginTimestamp(username) { 
     const date = Date.now()
     const result = await db.query(
-      `UPDATE users SET last_login_at=$1 WHERE username=$2`, [date, username]
+      `UPDATE users SET last_login_at=$1 WHERE username=$2 RETURNING username, last_login_at`, [date, username]
     )
   }
 
   /** All: basic info on all users:
    * [{username, first_name, last_name, phone}, ...] */
 
-  static async all() { }
+  static async all() { 
+    const results = await db.query(
+      `SELECT username, first_name, last_name, phone FROM users`
+    )
+    return results.rows
+  }
 
   /** Get: get user by username
    *
@@ -66,7 +76,11 @@ class User {
    *          last_login_at } */
 
   static async get(username) { 
-
+    checkUserAndPassword(username)
+    const result = await db.query(
+      `SELECT * FROM users WHERE username=$1`, [username]
+    )
+    return result.rows[0]
   }
 
   /** Return messages from this user.
@@ -77,7 +91,13 @@ class User {
    *   {username, first_name, last_name, phone}
    */
 
-  static async messagesFrom(username) { }
+  static async messagesFrom(username) { 
+    checkUserAndPassword(username)
+    const messages = await db.query(
+      `SELECT * FROM messages WHERE from_user=$1`, [username]
+    )
+    return messages.rows
+  }
 
   /** Return messages to this user.
    *
@@ -87,7 +107,14 @@ class User {
    *   {username, first_name, last_name, phone}
    */
 
-  static async messagesTo(username) { }
+  static async messagesTo(username) {
+    checkUserAndPassword(username)
+    const messages = await db.query(
+      `SELECT * FROM messages WHERE to_user=$1`, [username]
+    )
+    return messages.rows
+
+   }
 }
 
 

@@ -10,7 +10,7 @@ console.log(DB_USERNAME)
 const client = new Client({
   user: DB_USERNAME,
   host: 'localhost',
-  password: DB_PASSWORD + " ",
+  password: DB_PASSWORD,
   database: DB_URI,
   port: 5432, 
 });
