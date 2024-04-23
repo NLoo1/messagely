@@ -78,7 +78,7 @@ class User {
   static async get(username) { 
     checkUserAndPassword(username)
     const result = await db.query(
-      `SELECT * FROM users WHERE username=$1`, [username]
+      `SELECT username, first_name, last_name, phone, join_at, last_login_at FROM users WHERE username=$1`, [username]
     )
     return result.rows[0]
   }
@@ -94,7 +94,7 @@ class User {
   static async messagesFrom(username) { 
     checkUserAndPassword(username)
     const messages = await db.query(
-      `SELECT * FROM messages WHERE from_user=$1`, [username]
+      `SELECT username, first_name, last_name, phone, join_at, last_login_at FROM messages WHERE from_user=$1`, [username]
     )
     return messages.rows
   }
